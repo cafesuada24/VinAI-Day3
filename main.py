@@ -8,6 +8,9 @@ from src.core.llm_provider import LLMProvider
 from src.core.local_provider import LocalProvider
 from src.core.openai_provider import OpenAIProvider
 from src.tools.calculator import calculator
+from src.tools.inventory import check_stock
+from src.tools.logistics import calc_shipping
+from src.tools.promotion import get_discount
 from src.tools.wikipedia_search import wikipedia_search
 from src.tools.websearch import web_search, get_system_time
 
@@ -77,6 +80,32 @@ def get_tool_descriptions() -> list[dict[str, str | Callable[[str], str]]]:
                 "Input: none. Output: current date string."
             ),
             "func": get_system_time,
+        },
+        {
+            "name": "check_stock",
+            "description": (
+                "Check the available quantity of a specific item in the inventory. "
+                "Use this to verify if an item is in stock and get its current quantity. "
+                "Input: the name of the item (e.g., 'iPhone'). Output: item, quantity, and availability."
+            ),
+            "func": check_stock,
+        },
+        {
+            "name": "calc_shipping",
+            "description": (
+                "Calculate shipping cost. Input MUST be two values separated by a comma: "
+                "'weight, destination' (e.g., '2, Hanoi')."
+            ),
+            "func": calc_shipping,
+        },
+        {
+            "name": "get_discount",
+            "description": (
+                "Get the discount percentage for a specific coupon code. "
+                "Use this to validate promotions like 'WINNER' or 'VIP'. "
+                "Input: coupon code string. Output: discount amount and validity status."
+            ),
+            "func": get_discount,
         },
     ]
 
