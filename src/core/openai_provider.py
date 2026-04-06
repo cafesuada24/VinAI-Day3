@@ -3,14 +3,26 @@ from typing import Dict, Any, Optional, Generator
 from openai import OpenAI
 from src.core.llm_provider import LLMProvider
 
-class OpenAIProvider(LLMProvider):
-    def __init__(self, model_name: str = "gpt-4o", api_key: Optional[str] = None):
-        super().__init__(model_name, api_key)
-        self.client = OpenAI(api_key=self.api_key)
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> Dict[str, Any]:
+class OpenAIProvider(LLMProvider):
+    def __init__(
+        self,
+        model_name: str = "gpt-4o",
+        api_key: Optional[str] = None,
+        base_url: str | None = None,
+        extra_body: dict[str, object] | None = None,
+    ):
+        super().__init__(model_name, api_key)
+        self.client = OpenAI(api_key=self.api_key, base_url=base_url)
+        self.extra_body = extra_body
+
+    def generate(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+    ) -> Dict[str, Any]:
         start_time = time.time()
-        
+
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -19,6 +31,7 @@ class OpenAIProvider(LLMProvider):
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
+            extra_body=self.extra_body,
         )
 
         end_time = time.time()
@@ -29,17 +42,21 @@ class OpenAIProvider(LLMProvider):
         usage = {
             "prompt_tokens": response.usage.prompt_tokens,
             "completion_tokens": response.usage.completion_tokens,
-            "total_tokens": response.usage.total_tokens
+            "total_tokens": response.usage.total_tokens,
         }
 
         return {
             "content": content,
             "usage": usage,
             "latency_ms": latency_ms,
-            "provider": "openai"
+            "provider": "openai",
         }
 
-    def stream(self, prompt: str, system_prompt: Optional[str] = None) -> Generator[str, None, None]:
+    def stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+    ) -> Generator[str, None, None]:
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -48,7 +65,8 @@ class OpenAIProvider(LLMProvider):
         stream = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
-            stream=True
+            stream=True,
+            # temperature=0.3,
         )
 
         for chunk in stream:
